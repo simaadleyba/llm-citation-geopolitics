@@ -65,5 +65,7 @@ def query(job, config):
         json=_build_request(job, config),
         timeout=TIMEOUT,
     )
-    r.raise_for_status()
+    if not r.ok:
+        # openrouter explains 4xx in the body (no credit, no endpoint for provider, bad param)
+        raise RuntimeError(f"HTTP {r.status_code}: {r.text[:500]}")
     return parse(r.json())

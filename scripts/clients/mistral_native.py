@@ -16,7 +16,10 @@ Check that the org has no admin domain filter: filtered results are dropped sile
 import json
 import os
 
-from mistralai import Mistral
+try:
+    from mistralai.client import Mistral  # sdk v2+
+except ImportError:
+    from mistralai import Mistral  # sdk v1
 
 _client = None
 

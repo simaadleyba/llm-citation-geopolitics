@@ -145,7 +145,16 @@ def run_job(job, config, run_id):
         "provider_requested": model.get("openrouter_provider") if job["retriever"] == "common" else model["native"]["api"],
         "question_text": q["text"],
     }
-    client = client_for(job)
+    try:
+        client = client_for(job)
+    except Exception as e:  # noqa: BLE001 - missing/broken sdk: record, don't crash the run
+        return {
+            **base,
+            "status": "error",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "attempts": 0,
+            "error": f"client import failed: {type(e).__name__}: {e}",
+        }
     error = None
     for attempt in range(1, MAX_ATTEMPTS + 1):
         started = datetime.now(timezone.utc)
