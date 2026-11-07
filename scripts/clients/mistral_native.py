@@ -11,7 +11,9 @@ The conversation is stored (the default), because responses can end right after 
 search calls and the answer is fetched by continuing the same conversation (see query()).
 
 Retrieved = the urls in each tool.execution's info.result (the search results Mistral got).
-Cited = tool_reference chunks in the answer.
+Cited = tool_reference chunks in the answer. Large 4 returned none in the smoke tests, so
+when there are none cited_available=False, and citations come only from links in the text
+(the cite condition).
 Check that the org has no admin domain filter: filtered results are dropped silently.
 """
 
@@ -154,4 +156,9 @@ def query(job, config):
             "mistral still had no answer after its search calls "
             f"(conversation_id={resp.get('conversation_id')})"
         )
-    return parse(responses)
+    rec = parse(responses)
+    if not rec["cited_urls"]:
+        # large 4 returned no tool_reference chunks in the smoke tests: the structured
+        # citation channel is absent (format limit), links appear only if written in text
+        rec["cited_available"] = False
+    return rec

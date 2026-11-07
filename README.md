@@ -46,10 +46,12 @@ Observed in the smoke tests (re-check in the pilot):
 | | GPT | Claude | Gemini | Mistral | Qwen | DeepSeek |
 | --- | --- | --- | --- | --- | --- | --- |
 | sites checked (retrieved) | yes | yes | no | yes | yes | yes |
-| structured citations | yes | yes | yes | yes | no | no |
-| links in text when asked (cite) | yes | yes | – | – | yes | yes |
+| structured citations | yes | yes | yes | no | no | no |
+| links in text when asked (cite) | yes | yes | – | check | yes | yes |
 
 Qwen fans out (several queries per search call, often 5+ calls), so it retrieves far more pages than the others.
+Mistral Large 4 often stops after its searches without answering; the client continues the conversation
+with one word ("Continue." in the question's language) and logs how often (`n_continuations`).
 
 Cited = structured citations ∪ urls written in the answer text. `calls.csv` also records why a call has
 no citations (`citation_status`): `no_search` (answered from memory), `searched_no_cite` (a behavioral
