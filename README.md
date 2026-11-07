@@ -24,8 +24,11 @@ data/
   processed/             citations.csv, analysis.csv
   labels/                domain_labels.csv
 scripts/
-  run_queries.py         questions × config → data/raw/
-  extract_citations.py   raw → processed/citations.csv
+  run_queries.py         questions × config → data/raw/ (shuffled, retried, resumable)
+  clients/               one module per api, same query(job, config) -> record interface
+    openrouter.py        common retriever (all models, Exa)
+    *_native.py          openai, anthropic, google, mistral, deepseek, dashscope
+  extract_citations.py   raw → processed/calls.csv, citations.csv, domains_to_label.csv
   merge_labels.py        citations + labels + questions → processed/analysis.csv
 notebooks/               analysis only, never calls APIs
 logs/                    runtime logs (errors, retries, cost)
@@ -36,7 +39,9 @@ logs/                    runtime logs (errors, retries, cost)
 ```
 cp .env.example .env     # add keys
 pip install -r requirements.txt
-python scripts/run_queries.py
+python scripts/run_queries.py --dry-run     # list jobs, no calls
+python scripts/run_queries.py --limit 12    # pilot
+python scripts/run_queries.py               # full run; rerun to resume after a crash
 python scripts/extract_citations.py
 # label new domains in data/labels/domain_labels.csv
 python scripts/merge_labels.py
