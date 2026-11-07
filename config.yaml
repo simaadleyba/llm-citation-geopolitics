@@ -33,12 +33,12 @@ models:
     origin: FR
     openrouter_id: mistralai/mistral-large-4-0
     openrouter_provider: mistral
-    native: {api: mistral, model: TODO, tool: web_search}  # conversations api (beta). TODO: pinned large 4 id from client.models.list(); only cited urls exposed
+    native: {api: mistral, model: mistral-large-latest, tool: web_search}  # conversations api (beta). TEMP alias: replace with the dated id smoke_test logs as model_returned; only cited urls exposed
   - name: qwen
     origin: CN
     openrouter_id: qwen/qwen3.8-max-0902
     openrouter_provider: alibaba
-    native: {api: dashscope, model: TODO, tool: web_search, base_url: "https://ap-southeast-1.maas.qwencloudapi.com/compatible-mode/v1"}  # responses api, intl endpoint. TODO: dated qwen3.8-max 0902 snapshot id
+    native: {api: dashscope, model: qwen3.8-max-0902, tool: web_search, base_url: "https://ap-southeast-1.maas.qwencloudapi.com/compatible-mode/v1"}  # responses api, intl endpoint
   - name: deepseek
     origin: CN
     openrouter_id: deepseek/deepseek-v4-pro-0813
