@@ -25,6 +25,8 @@ except ImportError:
 
 _client = None
 MAX_CONTINUATIONS = 3
+# the api rejects an empty append, so the continuation is one neutral word in the question's language
+CONTINUE = {"en": "Continue.", "fr": "Continuez.", "zh": "请继续。"}
 
 
 def _get_client():
@@ -143,7 +145,8 @@ def query(job, config):
     responses = [resp]
     while _ends_after_tools(resp) and len(responses) <= MAX_CONTINUATIONS:
         resp = client.beta.conversations.append(
-            conversation_id=resp["conversation_id"], inputs=[]
+            conversation_id=resp["conversation_id"],
+            inputs=CONTINUE.get(job["question"].get("lang"), CONTINUE["en"]),
         ).model_dump(mode="json")
         responses.append(resp)
     if _ends_after_tools(resp):
