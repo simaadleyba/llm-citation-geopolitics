@@ -18,7 +18,7 @@ models:
     origin: US
     openrouter_id: openai/gpt-6.1-sol
     openrouter_provider: OpenAI
-    native: {api: openai, model: TODO, tool: web_search}
+    native: {api: openai, model: gpt-6.1-sol, tool: web_search, tool_choice: auto}  # model id assumed = openrouter slug minus prefix; verify
   - name: claude
     origin: US
     openrouter_id: anthropic/claude-sonnet-5.5
