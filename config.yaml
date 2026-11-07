@@ -33,7 +33,7 @@ models:
     origin: FR
     openrouter_id: mistralai/mistral-large-4-0
     openrouter_provider: Mistral
-    native: {api: mistral, model: TODO, tool: web_search}  # conversations api (beta)
+    native: {api: mistral, model: TODO, tool: web_search}  # conversations api (beta). TODO: pinned large 4 id from client.models.list(); only cited urls exposed
   - name: qwen
     origin: CN
     openrouter_id: qwen/qwen3.8-max-0902

@@ -3,6 +3,7 @@
 text            final answer text
 search_queries  list[str], queries the search tool ran (empty if not exposed)
 retrieved_urls  list[str], every url the search returned, in order, deduped
+retrieved_available  bool, False when the api exposes only cited urls (mistral native)
 cited_urls      list[str], urls cited in the answer, in order, deduped
 n_searches      int, number of searches run (None if not exposed)
 usage           dict, token and tool usage as reported by the api
