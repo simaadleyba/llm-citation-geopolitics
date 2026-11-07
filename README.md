@@ -24,6 +24,7 @@ data/
   processed/             citations.csv, analysis.csv
   labels/                domain_labels.csv
 scripts/
+  smoke_test.py          one hard-coded question × all configs → logs/ (checks keys, ids, parsers)
   run_queries.py         questions × config → data/raw/ (shuffled, retried, resumable)
   clients/               one module per api, same query(job, config) -> record interface
     openrouter.py        common retriever (all models, Exa)
@@ -39,6 +40,7 @@ logs/                    runtime logs (errors, retries, cost)
 ```
 cp .env.example .env     # add keys
 pip install -r requirements.txt
+python scripts/smoke_test.py                # one fixed question through all 12 configs
 python scripts/run_queries.py --dry-run     # list jobs, no calls
 python scripts/run_queries.py --limit 12    # pilot
 python scripts/run_queries.py               # full run; rerun to resume after a crash
