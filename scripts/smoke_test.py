@@ -79,10 +79,13 @@ def main():
             n_ret = len(r.get("retrieved_urls") or []) if r.get("retrieved_available", True) else "n/a"
             cited = r.get("cited_urls") or []
             note = host(cited[0]) if cited else "(no citations)"
+            if r.get("cited_available") is False:
+                note = "(api exposes no citations)"
             if r.get("model_returned") and r["model_returned"] != r["model_requested"]:
                 note += f"  [model_returned={r['model_returned']}]"
+            n_cit = len(cited) if r.get("cited_available", True) else "n/a"
             print(fmt.format(r["model"], r["retriever"], "ok", r.get("n_searches") or 0,
-                             n_ret, len(cited), note))
+                             n_ret, n_cit, note))
         else:
             print(fmt.format(r["model"], r["retriever"], "ERROR", "", "", "", r["error"][:80]))
 

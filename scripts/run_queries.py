@@ -162,6 +162,7 @@ def run_job(job, config, run_id):
         try:
             out = client.query(job, config)
             out.setdefault("retrieved_available", True)
+            out.setdefault("cited_available", True)
             return {
                 **base,
                 "status": "ok",

@@ -14,6 +14,7 @@ no user_location (Exa ignores it anyway).
 """
 
 import os
+import re
 
 import requests
 
@@ -48,8 +49,18 @@ def _build_request(job, config):
     return req
 
 
+URL_RE = re.compile(r"https?://[^\s)\]>\"'`]+")
+
+
 def parse(resp):
+    """OpenRouter attaches every search result to the message as a url_citation annotation
+    (start_index = end_index = 0, i.e. not anchored to any text), so annotations are not
+    citations. Cited = urls the model actually wrote into its answer; the annotation list is
+    kept as annotated_urls. Most models write no urls without being asked, so cited is
+    usually empty here, which is why the common retriever needs a citation instruction."""
     rec = openai_native.parse_lenient(resp)
+    rec["annotated_urls"] = rec["cited_urls"]
+    rec["cited_urls"] = openai_native._dedupe(u.rstrip(".,;:") for u in URL_RE.findall(rec["text"]))
     rec["provider_returned"] = resp.get("provider")
     return rec
 

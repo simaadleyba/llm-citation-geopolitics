@@ -32,6 +32,7 @@ CALL_FIELDS = [
     "job_id", "run_id", "timestamp", "question_id", "lang", "topic_country",
     "controversy", "model", "origin", "retriever", "rep", "model_requested",
     "model_returned", "provider_requested", "provider_returned", "retrieved_available",
+    "cited_available",
     "n_searches", "latency_s", "attempts", "stop_reason",
 ]
 
@@ -160,7 +161,7 @@ def main():
     print(f"{len(cit)} url rows, {int(cit['cited'].sum())} cited, "
           f"{cit['domain'].isna().sum()} without a domain")
     print(f"{len(todo)} domains still to label -> {OUT_DIR / 'domains_to_label.csv'}")
-    no_cite = calls[calls["n_cited"] == 0]
+    no_cite = calls[(calls["n_cited"] == 0) & (calls["cited_available"] != False)]  # noqa: E712
     if len(no_cite):
         print(f"warning: {len(no_cite)} calls cited nothing (check refusals / no-search answers)")
 

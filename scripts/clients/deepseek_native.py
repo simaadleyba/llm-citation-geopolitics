@@ -39,6 +39,13 @@ def _get_client():
 
 
 def query(job, config):
-    """Run one question through DeepSeek with its server-side web search. Raises on API errors."""
+    """Run one question through DeepSeek with its server-side web search. Raises on API errors.
+
+    DeepSeek returns the search queries and result urls but no citation blocks (text
+    blocks carry citations=None), so cited_available=False: we can see what it
+    retrieved but not what it used.
+    """
     req = anthropic_native._build_request(job, config)
-    return anthropic_native.run(_get_client(), req)
+    rec = anthropic_native.run(_get_client(), req)
+    rec["cited_available"] = False
+    return rec
