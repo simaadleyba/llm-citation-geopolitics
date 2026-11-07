@@ -9,6 +9,15 @@ Output: data/processed/calls.csv           one row per successful job
 If a job_id appears more than once with status=ok (e.g. a manual rerun), the earliest
 ok record is kept so results don't depend on rerun order.
 
+Cited = the api's structured citations (cited_urls) plus urls the model wrote in its answer
+(text_urls); citations.csv keeps both flags (cited_structured, cited_text).
+
+calls.csv citation_status separates why a call has no citations:
+    no_search           the model answered without searching
+    api_no_citations    the api can't return citations (deepseek native) and the text has no urls
+    searched_no_cite    it searched, could have cited, and didn't (a behavioral signal)
+    cited               at least one citation
+
 Domains: registrable domain via tldextract using its bundled suffix list (no network,
 reproducible). Google grounding redirect urls carry no real domain, so for those the
 citation title (which Gemini sets to the source domain) is used and domain_source="title".
@@ -30,7 +39,7 @@ REDIRECT_HOSTS = {"vertexaisearch.cloud.google.com"}
 
 CALL_FIELDS = [
     "job_id", "run_id", "timestamp", "question_id", "lang", "topic_country",
-    "controversy", "model", "origin", "retriever", "rep", "model_requested",
+    "controversy", "model", "origin", "retriever", "condition", "rep", "model_requested",
     "model_returned", "provider_requested", "provider_returned", "retrieved_available",
     "cited_available",
     "n_searches", "latency_s", "attempts", "stop_reason",
@@ -93,7 +102,9 @@ def load_raw(raw_dir=RAW_DIR):
 def explode_record(rec):
     """One row per unique url in the record, flagging retrieved and cited with ranks."""
     retrieved = rec.get("retrieved_urls") or []
-    cited = rec.get("cited_urls") or []
+    structured = rec.get("cited_urls") or []
+    in_text = rec.get("text_urls") or []
+    cited = list(dict.fromkeys(structured + in_text))
     titles = {r.get("url"): r.get("title") for r in rec.get("references") or [] if r.get("url")}
     r_rank = {u: i + 1 for i, u in enumerate(retrieved)}
     c_rank = {u: i + 1 for i, u in enumerate(cited)}
@@ -112,16 +123,31 @@ def explode_record(rec):
             "domain_source": source,
             "retrieved": url in r_rank,
             "cited": url in c_rank,
+            "cited_structured": url in structured,
+            "cited_text": url in in_text,
             "retrieve_rank": r_rank.get(url),
             "cite_rank": c_rank.get(url),
         })
     return rows
 
 
+def citation_status(rec, n_cited):
+    if n_cited:
+        return "cited"
+    if not rec.get("n_searches"):
+        return "no_search"
+    if rec.get("cited_available") is False:
+        return "api_no_citations"
+    return "searched_no_cite"
+
+
 def call_row(rec):
     row = {k: rec.get(k) for k in CALL_FIELDS}
     row["n_retrieved"] = len(rec.get("retrieved_urls") or [])
-    row["n_cited"] = len(rec.get("cited_urls") or [])
+    row["n_cited_structured"] = len(rec.get("cited_urls") or [])
+    row["n_text_urls"] = len(rec.get("text_urls") or [])
+    row["n_cited"] = len(set((rec.get("cited_urls") or []) + (rec.get("text_urls") or [])))
+    row["citation_status"] = citation_status(rec, row["n_cited"])
     row["search_queries"] = json.dumps(rec.get("search_queries") or [], ensure_ascii=False)
     row["text_len"] = len(rec.get("text") or "")
     return row
@@ -150,7 +176,8 @@ def main():
     cit = pd.DataFrame([row for r in records for row in explode_record(r)])
     if cit.empty:
         cit = pd.DataFrame(columns=["job_id", "url", "domain", "domain_source", "retrieved",
-                                    "cited", "retrieve_rank", "cite_rank"])
+                                    "cited", "cited_structured", "cited_text",
+                                    "retrieve_rank", "cite_rank"])
     todo = unlabeled_domains(cit)
 
     calls.to_csv(OUT_DIR / "calls.csv", index=False)
@@ -161,9 +188,7 @@ def main():
     print(f"{len(cit)} url rows, {int(cit['cited'].sum())} cited, "
           f"{cit['domain'].isna().sum()} without a domain")
     print(f"{len(todo)} domains still to label -> {OUT_DIR / 'domains_to_label.csv'}")
-    no_cite = calls[(calls["n_cited"] == 0) & (calls["cited_available"] != False)]  # noqa: E712
-    if len(no_cite):
-        print(f"warning: {len(no_cite)} calls cited nothing (check refusals / no-search answers)")
+    print("citation status:", calls["citation_status"].value_counts().to_dict())
 
 
 if __name__ == "__main__":

@@ -8,6 +8,8 @@ Usage:
     python scripts/run_queries.py --dry-run              # list jobs, call nothing
     python scripts/run_queries.py --limit 5              # pilot
     python scripts/run_queries.py --retriever native --model deepseek
+    python scripts/run_queries.py --condition cite      # robustness arm
+    python scripts/run_queries.py --retriever common    # optional openrouter + exa condition
     python scripts/run_queries.py                        # full run, resumes automatically
 
 Resume: every job has a deterministic job_id. Jobs that already have a status=ok line
@@ -21,6 +23,7 @@ import importlib
 import json
 import logging
 import random
+import re
 import sys
 import threading
 import time
@@ -66,8 +69,8 @@ def load_questions(path=ROOT / "data" / "questions.jsonl"):
     return questions
 
 
-def job_id(q, model, retriever, rep):
-    return f"{q['question_id']}|{q['lang']}|{model['name']}|{retriever}|{rep}"
+def job_id(q, model, retriever, condition, rep):
+    return f"{q['question_id']}|{q['lang']}|{model['name']}|{retriever}|{condition}|{rep}"
 
 
 def build_jobs(questions, config, args):
@@ -84,17 +87,17 @@ def build_jobs(questions, config, args):
         for model in config["models"]:
             if args.model and model["name"] not in args.model:
                 continue
-            for retriever in ("common", "native"):
-                if args.retriever and retriever != args.retriever:
-                    continue
-                for rep in range(run["reps"]):
-                    jobs.append({
-                        "job_id": job_id(q, model, retriever, rep),
-                        "question": q,
-                        "model": model,
-                        "retriever": retriever,
-                        "rep": rep,
-                    })
+            for retriever in ([args.retriever] if args.retriever else run["retrievers"]):
+                for cond in ([args.condition] if args.condition else run["conditions"]):
+                    for rep in range(config["conditions"][cond]["reps"]):
+                        jobs.append({
+                            "job_id": job_id(q, model, retriever, cond, rep),
+                            "question": q,
+                            "model": model,
+                            "retriever": retriever,
+                            "condition": cond,
+                            "rep": rep,
+                        })
     if run.get("shuffle_order", True):
         random.Random(run.get("seed", 0)).shuffle(jobs)
     return jobs
@@ -128,6 +131,21 @@ def model_requested(job):
     return job["model"]["native"]["model"]
 
 
+URL_RE = re.compile(r"https?://[^\s)\]>\"'`<]+")
+
+
+def text_urls(text):
+    """Urls the model wrote into its answer (markdown links or bare)."""
+    return list(dict.fromkeys(u.rstrip(".,;:!?") for u in URL_RE.findall(text or "")))
+
+
+def config_for(job, config):
+    """Config with the job's condition applied (its system prompt)."""
+    cond = config["conditions"][job["condition"]]
+    return {**config, "generation": {**config.get("generation", {}),
+                                      "system_prompt": cond.get("system_prompt")}}
+
+
 def run_job(job, config, run_id):
     q, model = job["question"], job["model"]
     base = {
@@ -140,6 +158,7 @@ def run_job(job, config, run_id):
         "model": model["name"],
         "origin": model["origin"],
         "retriever": job["retriever"],
+        "condition": job["condition"],
         "rep": job["rep"],
         "model_requested": model_requested(job),
         "provider_requested": model.get("openrouter_provider") if job["retriever"] == "common" else model["native"]["api"],
@@ -160,8 +179,9 @@ def run_job(job, config, run_id):
         started = datetime.now(timezone.utc)
         t0 = time.monotonic()
         try:
-            out = client.query(job, config)
+            out = client.query(job, config_for(job, config))
             out.setdefault("retrieved_available", True)
+            out["text_urls"] = text_urls(out.get("text"))
             out.setdefault("cited_available", True)
             return {
                 **base,
@@ -208,6 +228,7 @@ def setup_logging():
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--retriever", choices=["common", "native"])
+    p.add_argument("--condition", help="prompt condition from config, e.g. default or cite")
     p.add_argument("--model", nargs="+", help="model names from config, e.g. claude deepseek")
     p.add_argument("--lang", nargs="+", help="e.g. en zh")
     p.add_argument("--question", nargs="+", help="question_ids")

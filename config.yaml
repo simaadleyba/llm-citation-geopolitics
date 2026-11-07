@@ -1,8 +1,10 @@
 # run configuration. this file is the methods-section record: pin everything here, not in code.
 
 run:
-  reps: 5
   languages: [en, fr, zh]
+  retrievers: [native]    # main design: each vendor's own search api ("what users get").
+                          # add "common" to also run the openrouter + exa condition (clients/openrouter.py, kept but off)
+  conditions: [default]   # add "cite" to run the robustness arm below
   shuffle_order: true
   seed: 540
   output_dir: data/raw
@@ -57,4 +59,12 @@ retrievers:
 
 generation:
   temperature: null      # null = provider default; report actual value used
-  system_prompt: null    # none, or one identical minimal prompt
+
+# prompt conditions. each job runs under one; the condition is part of its job_id.
+conditions:
+  default:               # primary: bare api call, no instruction
+    system_prompt: null
+    reps: 3
+  cite:                  # robustness arm: same question + a uniform citation instruction.
+    system_prompt: "Cite your sources inline as links."   # measures how much asking for citations
+    reps: 1                                              # changes visibility; recovers deepseek citations

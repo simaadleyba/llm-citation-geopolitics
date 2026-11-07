@@ -1,4 +1,4 @@
-"""Smoke test: one hard-coded question through every model x retriever, once.
+"""Smoke test: one hard-coded question through every model (x retriever), once.
 
 Checks that keys, model ids, provider slugs and response parsers work before the pilot.
 Does not touch data/questions.jsonl or data/raw/. Full records (including raw api
@@ -8,6 +8,8 @@ Usage:
     python scripts/smoke_test.py
     python scripts/smoke_test.py --model deepseek qwen --retriever native
     python scripts/smoke_test.py --text "..." --lang zh
+    python scripts/smoke_test.py --condition cite
+    python scripts/smoke_test.py --retriever common     # openrouter + exa (off in the main design)
 """
 
 import argparse
@@ -37,7 +39,9 @@ def main():
     p.add_argument("--text", default=DEFAULT_TEXT)
     p.add_argument("--lang", default="en")
     p.add_argument("--model", nargs="+")
-    p.add_argument("--retriever", choices=["common", "native"])
+    p.add_argument("--retriever", choices=["common", "native"],
+                   help="default: the retrievers listed in config run.retrievers")
+    p.add_argument("--condition", default="default", help="prompt condition, e.g. default or cite")
     p.add_argument("--workers", type=int, default=6)
     args = p.parse_args()
 
@@ -54,11 +58,10 @@ def main():
     for model in config["models"]:
         if args.model and model["name"] not in args.model:
             continue
-        for retriever in ("common", "native"):
-            if args.retriever and retriever != args.retriever:
-                continue
-            jobs.append({"job_id": rq.job_id(q, model, retriever, 0), "question": q,
-                         "model": model, "retriever": retriever, "rep": 0})
+        for retriever in ([args.retriever] if args.retriever else config["run"]["retrievers"]):
+            jobs.append({"job_id": rq.job_id(q, model, retriever, args.condition, 0), "question": q,
+                         "model": model, "retriever": retriever, "condition": args.condition,
+                         "rep": 0})
 
     rq.MAX_ATTEMPTS = 1  # fail fast: we want to see errors, not retry them
     print(f"{len(jobs)} calls: {args.text!r}\n")
@@ -84,6 +87,8 @@ def main():
             if r.get("model_returned") and r["model_returned"] != r["model_requested"]:
                 note += f"  [model_returned={r['model_returned']}]"
             n_cit = len(cited) if r.get("cited_available", True) else "n/a"
+            if r.get("text_urls"):
+                note += f"  [+{len(r['text_urls'])} urls in text]"
             print(fmt.format(r["model"], r["retriever"], "ok", r.get("n_searches") or 0,
                              n_ret, n_cit, note))
         else:
