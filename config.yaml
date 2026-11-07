@@ -1,5 +1,4 @@
 # run configuration. this file is the methods-section record: pin everything here, not in code.
-# TODO: fill exact model ids / versions before the pilot.
 
 run:
   reps: 5
@@ -12,33 +11,39 @@ models:
   # name: short label used in logs
   # origin: US | FR | CN
   # openrouter_id: model slug on OpenRouter (common retriever)
-  # openrouter_provider: pinned hosting provider on OpenRouter
-  # native: how the provider's own API exposes search (native retriever)
+  # openrouter_provider: pinned hosting provider on OpenRouter (vendor itself where offered)
+  # native: the vendor's own API + search tool (native retriever). must be the same model as openrouter_id
+  # TODO: fill native.model ids from each vendor's docs; confirm each supports the vendor's search tool
   - name: gpt
     origin: US
-    openrouter_id: TODO
-    openrouter_provider: TODO
+    openrouter_id: openai/gpt-6.1-sol
+    openrouter_provider: OpenAI
     native: {api: openai, model: TODO, tool: web_search}
   - name: claude
     origin: US
-    openrouter_id: TODO
-    openrouter_provider: TODO
+    openrouter_id: anthropic/claude-sonnet-5.5
+    openrouter_provider: Anthropic
     native: {api: anthropic, model: TODO, tool: web_search}
+  - name: gemini
+    origin: US
+    openrouter_id: google/gemini-4-argon
+    openrouter_provider: Google
+    native: {api: google, model: TODO, tool: google_search}
   - name: mistral
     origin: FR
-    openrouter_id: TODO
-    openrouter_provider: TODO
+    openrouter_id: mistralai/mistral-large-4-0
+    openrouter_provider: Mistral
     native: {api: mistral, model: TODO, tool: web_search}  # conversations api (beta)
-  - name: deepseek
-    origin: CN
-    openrouter_id: TODO
-    openrouter_provider: TODO
-    native: {api: deepseek, model: TODO, tool: web_search}
   - name: qwen
     origin: CN
-    openrouter_id: TODO
-    openrouter_provider: TODO
+    openrouter_id: qwen/qwen3.8-max-0902
+    openrouter_provider: Alibaba
     native: {api: dashscope, model: TODO, enable_search: true, enable_source: true}
+  - name: deepseek
+    origin: CN
+    openrouter_id: deepseek/deepseek-v4-pro-0813
+    openrouter_provider: DeepSeek  # TODO: confirm DeepSeek is listed as a provider; if not, note as limitation
+    native: {api: deepseek, model: TODO, tool: web_search}
 
 retrievers:
   common:

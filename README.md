@@ -6,13 +6,13 @@ Auditing which news sources LLM search cites, and how that shifts with model ori
 
 | Factor | Levels |
 | --- | --- |
-| Model origin | US (GPT, Claude), FR (Mistral), CN (DeepSeek, Qwen) |
+| Model origin | US (GPT-6.1 Sol, Claude Sonnet 5.5, Gemini 4 Argon), FR (Mistral Large 4), CN (Qwen3.8 Max, DeepSeek V4 Pro) |
 | Query language | EN, FR, ZH (Simplified) |
 | Topic country | US, FR, CN |
 | Controversy | factual, disputed |
 | Retriever | common (OpenRouter + Exa), native (provider's own search) |
 
-36 questions × 3 languages × 5 models × 2 retrievers × 5 reps = 5,400 calls.
+36 questions (6 per topic country × controversy cell) × 3 languages × 6 models × 2 retrievers × 5 reps = 6,480 calls.
 
 ## Layout
 
