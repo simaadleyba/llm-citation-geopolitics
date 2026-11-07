@@ -45,7 +45,7 @@ Observed in the smoke tests (re-check in the pilot):
 
 | | GPT | Claude | Gemini | Mistral | Qwen | DeepSeek |
 | --- | --- | --- | --- | --- | --- | --- |
-| sites checked (retrieved) | yes | yes | no | no | yes | yes |
+| sites checked (retrieved) | yes | yes | no | yes | yes | yes |
 | structured citations | yes | yes | yes | yes | no | no |
 | links in text when asked (cite) | yes | yes | – | – | yes | yes |
 
