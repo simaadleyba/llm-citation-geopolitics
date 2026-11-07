@@ -30,13 +30,13 @@ part. `clients/openrouter.py` is kept; add `common` to `run.retrievers` in confi
 
 ### Prompt conditions
 
-- **default**: the bare question, no system prompt. Five of six APIs return structured citations
-  without being asked.
+- **default**: the bare question, no system prompt. GPT, Claude and Gemini return structured citations
+  without being asked; Mistral, Qwen and DeepSeek return none.
 - **cite**: the same question with one instruction appended to the question text, translated into the
   question's language (config `conditions.cite.suffix`). It goes in the question, not a system prompt,
   because DeepSeek ignores system prompts when search is on. Asking for citations can change what gets
   cited, so this condition measures that effect rather than assuming it away. It also recovers citations
-  for DeepSeek and Qwen, whose APIs return none by default. Records keep both `question_text` and the
+  for Mistral, Qwen and DeepSeek, whose APIs return none by default. Records keep both `question_text` and the
   `prompt_text` actually sent.
 
 ### What is measured per call
