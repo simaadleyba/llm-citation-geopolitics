@@ -28,7 +28,7 @@ models:
     origin: US
     openrouter_id: google/gemini-3.8-flash
     openrouter_provider: Google
-    native: {api: google, model: TODO, tool: google_search}
+    native: {api: google, model: gemini-3.8-flash, tool: google_search}  # interactions api; cited urls only, may be redirect links
   - name: mistral
     origin: FR
     openrouter_id: mistralai/mistral-large-4-0
