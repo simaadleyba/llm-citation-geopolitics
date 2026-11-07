@@ -1,0 +1,11 @@
+openai
+anthropic
+mistralai
+dashscope
+requests
+python-dotenv
+pyyaml
+tldextract
+pandas
+statsmodels
+jupyter

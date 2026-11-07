@@ -1,0 +1,54 @@
+# run configuration. this file is the methods-section record: pin everything here, not in code.
+# TODO: fill exact model ids / versions before the pilot.
+
+run:
+  reps: 5
+  languages: [en, fr, zh]
+  shuffle_order: true
+  seed: 540
+  output_dir: data/raw
+
+models:
+  # name: short label used in logs
+  # origin: US | FR | CN
+  # openrouter_id: model slug on OpenRouter (common retriever)
+  # openrouter_provider: pinned hosting provider on OpenRouter
+  # native: how the provider's own API exposes search (native retriever)
+  - name: gpt
+    origin: US
+    openrouter_id: TODO
+    openrouter_provider: TODO
+    native: {api: openai, model: TODO, tool: web_search}
+  - name: claude
+    origin: US
+    openrouter_id: TODO
+    openrouter_provider: TODO
+    native: {api: anthropic, model: TODO, tool: web_search}
+  - name: mistral
+    origin: FR
+    openrouter_id: TODO
+    openrouter_provider: TODO
+    native: {api: mistral, model: TODO, tool: web_search}  # conversations api (beta)
+  - name: deepseek
+    origin: CN
+    openrouter_id: TODO
+    openrouter_provider: TODO
+    native: {api: deepseek, model: TODO, tool: web_search}
+  - name: qwen
+    origin: CN
+    openrouter_id: TODO
+    openrouter_provider: TODO
+    native: {api: dashscope, model: TODO, enable_search: true, enable_source: true}
+
+retrievers:
+  common:
+    via: openrouter
+    engine: exa          # forced for all models, including those with native search
+    max_results: 10
+    searches_per_request: 1
+  native:
+    via: provider_api
+
+generation:
+  temperature: null      # null = provider default; report actual value used
+  system_prompt: null    # none, or one identical minimal prompt
