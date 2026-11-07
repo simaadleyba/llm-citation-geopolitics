@@ -26,7 +26,7 @@ models:
     native: {api: anthropic, model: claude-sonnet-5-5, tool: web_search_20250305, max_uses: 5}
   - name: gemini
     origin: US
-    openrouter_id: google/gemini-4-argon
+    openrouter_id: google/gemini-3.8-flash
     openrouter_provider: Google
     native: {api: google, model: TODO, tool: google_search}
   - name: mistral

@@ -6,7 +6,7 @@ Auditing which news sources LLM search cites, and how that shifts with model ori
 
 | Factor | Levels |
 | --- | --- |
-| Model origin | US (GPT-6.1 Sol, Claude Sonnet 5.5, Gemini 4 Argon), FR (Mistral Large 4), CN (Qwen3.8 Max, DeepSeek V4 Pro) |
+| Model origin | US (GPT-6.1 Sol, Claude Sonnet 5.5, Gemini 3.8 Flash), FR (Mistral Large 4), CN (Qwen3.8 Max, DeepSeek V4 Pro) |
 | Query language | EN, FR, ZH (Simplified) |
 | Topic country | US, FR, CN |
 | Controversy | factual, disputed |
