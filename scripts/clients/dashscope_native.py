@@ -45,29 +45,8 @@ def _build_request(job, config):
     return req
 
 
-def _scan_urls(obj, out):
-    """Collect every 'url' value nested anywhere in obj (Qwen's search item shape isn't documented)."""
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            if k == "url" and isinstance(v, str):
-                out.append(v)
-            else:
-                _scan_urls(v, out)
-    elif isinstance(obj, list):
-        for v in obj:
-            _scan_urls(v, out)
-
-
 def parse(resp):
-    rec = openai_native.parse(resp)
-    # fallback: if the openai-shaped parse found no retrieved urls, scan the search items
-    if not rec["retrieved_urls"]:
-        found = []
-        for item in resp.get("output", []):
-            if "search" in (item.get("type") or ""):
-                _scan_urls(item, found)
-        rec["retrieved_urls"] = openai_native._dedupe(found)
-    return rec
+    return openai_native.parse_lenient(resp)
 
 
 def query(job, config):

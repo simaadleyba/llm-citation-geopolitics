@@ -11,46 +11,47 @@ models:
   # name: short label used in logs
   # origin: US | FR | CN
   # openrouter_id: model slug on OpenRouter (common retriever)
-  # openrouter_provider: pinned hosting provider on OpenRouter (vendor itself where offered)
+  # openrouter_provider: provider slug on OpenRouter, pinned with fallbacks off (vendor itself where offered; verify slugs on each model's Providers tab)
   # native: the vendor's own API + search tool (native retriever). must be the same model as openrouter_id
   # TODO: fill native.model ids from each vendor's docs; confirm each supports the vendor's search tool
   - name: gpt
     origin: US
     openrouter_id: openai/gpt-6.1-sol
-    openrouter_provider: OpenAI
+    openrouter_provider: openai
     native: {api: openai, model: gpt-6.1-sol, tool: web_search, tool_choice: auto}  # model id assumed = openrouter slug minus prefix; verify
   - name: claude
     origin: US
     openrouter_id: anthropic/claude-sonnet-5.5
-    openrouter_provider: Anthropic
+    openrouter_provider: anthropic
     native: {api: anthropic, model: claude-sonnet-5-5, tool: web_search_20250305, max_uses: 5}
   - name: gemini
     origin: US
     openrouter_id: google/gemini-3.8-flash
-    openrouter_provider: Google
+    openrouter_provider: google-ai-studio
     native: {api: google, model: gemini-3.8-flash, tool: google_search}  # interactions api; cited urls only, may be redirect links
   - name: mistral
     origin: FR
     openrouter_id: mistralai/mistral-large-4-0
-    openrouter_provider: Mistral
+    openrouter_provider: mistral
     native: {api: mistral, model: TODO, tool: web_search}  # conversations api (beta). TODO: pinned large 4 id from client.models.list(); only cited urls exposed
   - name: qwen
     origin: CN
     openrouter_id: qwen/qwen3.8-max-0902
-    openrouter_provider: Alibaba
+    openrouter_provider: alibaba
     native: {api: dashscope, model: TODO, tool: web_search, base_url: "https://ap-southeast-1.maas.qwencloudapi.com/compatible-mode/v1"}  # responses api, intl endpoint. TODO: dated qwen3.8-max 0902 snapshot id
   - name: deepseek
     origin: CN
     openrouter_id: deepseek/deepseek-v4-pro-0813
-    openrouter_provider: DeepSeek  # TODO: confirm DeepSeek is listed as a provider; if not, note as limitation
+    openrouter_provider: deepseek  # TODO: confirm DeepSeek is listed as a provider; if not, note as limitation
     native: {api: deepseek, model: deepseek-v4-pro, tool: web_search_20250305, max_uses: 5}  # anthropic-format endpoint; deepseek-v4-pro = DeepSeek-V4-Pro-0813
 
 retrievers:
   common:
-    via: openrouter
-    engine: exa          # forced for all models, including those with native search
-    max_results: 10
-    searches_per_request: 1
+    via: openrouter          # responses api + openrouter:web_search server tool
+    engine: exa              # forced for all models, including those with native search
+    mode: auto               # exa search mode, pinned
+    max_results: 10          # per search call
+    max_uses: 5              # searches per request, same cap as claude/deepseek native
   native:
     via: provider_api
 

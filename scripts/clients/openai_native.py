@@ -93,6 +93,45 @@ def parse(resp):
     }
 
 
+def _scan_urls(obj, out):
+    """Collect every 'url' value nested anywhere in obj."""
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k == "url" and isinstance(v, str):
+                out.append(v)
+            else:
+                _scan_urls(v, out)
+    elif isinstance(obj, list):
+        for v in obj:
+            _scan_urls(v, out)
+
+
+def parse_lenient(resp):
+    """parse() for OpenAI-compatible Responses APIs whose search items aren't shaped
+    exactly like OpenAI's (Qwen, OpenRouter): any output item whose type contains
+    'search' counts as a search call, and urls/queries are scanned out of it."""
+    rec = parse(resp)
+    search_items = [i for i in resp.get("output", []) if "search" in (i.get("type") or "")]
+    if not rec["retrieved_urls"]:
+        found = []
+        for item in search_items:
+            _scan_urls(item, found)
+        rec["retrieved_urls"] = _dedupe(found)
+    if not rec["n_searches"]:
+        rec["n_searches"] = len(search_items)
+    if not rec["search_queries"]:
+        qs = []
+        for item in search_items:
+            for src in (item.get("action") or {}, item.get("arguments") or {}, item):
+                if isinstance(src, str):
+                    continue
+                if isinstance(src.get("query"), str):
+                    qs.append(src["query"])
+                qs += [q for q in src.get("queries") or [] if isinstance(q, str)]
+        rec["search_queries"] = _dedupe(qs)
+    return rec
+
+
 def query(job, config):
     """Run one question through GPT with native web search. Raises on API errors."""
     resp = _get_client().responses.create(**_build_request(job, config))
