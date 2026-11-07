@@ -23,7 +23,7 @@ models:
     origin: US
     openrouter_id: anthropic/claude-sonnet-5.5
     openrouter_provider: Anthropic
-    native: {api: anthropic, model: TODO, tool: web_search}
+    native: {api: anthropic, model: claude-sonnet-5-5, tool: web_search_20250305, max_uses: 5}
   - name: gemini
     origin: US
     openrouter_id: google/gemini-4-argon
