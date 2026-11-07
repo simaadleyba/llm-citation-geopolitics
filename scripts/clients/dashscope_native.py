@@ -46,7 +46,14 @@ def _build_request(job, config):
 
 
 def parse(resp):
-    return openai_native.parse_lenient(resp)
+    """Qwen's search items hold several queries each (fan-out), so search_queries can be
+    much longer than n_searches. The API returned no url_citation annotations in any smoke
+    run; Qwen only cites as links in its text, and only when asked. cited_available=False
+    marks that the structured channel is absent (a format limit, not behavior)."""
+    rec = openai_native.parse_lenient(resp)
+    if not rec["cited_urls"]:
+        rec["cited_available"] = False
+    return rec
 
 
 def query(job, config):

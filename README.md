@@ -38,10 +38,16 @@ part. `clients/openrouter.py` is kept; add `common` to `run.retrievers` in confi
 
 ### What is measured per call
 
+Observed in the smoke tests (re-check in the pilot):
+
 | | GPT | Claude | Gemini | Mistral | Qwen | DeepSeek |
 | --- | --- | --- | --- | --- | --- | --- |
-| sites checked (retrieved) | yes | yes | no | no | check in pilot | yes |
-| structured citations | yes | yes | yes | yes | yes | no |
+| sites checked (retrieved) | yes | yes | no | no | yes | yes |
+| structured citations | yes | yes | yes | yes | no | no |
+| links in text when asked (cite) | yes | yes | – | – | yes | no |
+
+DeepSeek writes no links even when asked, so it is measured by what it retrieved only.
+Qwen fans out (several queries per search call, often 5+ calls), so it retrieves far more pages than the others.
 
 Cited = structured citations ∪ urls written in the answer text. `calls.csv` also records why a call has
 no citations (`citation_status`): `no_search` (answered from memory), `searched_no_cite` (a behavioral

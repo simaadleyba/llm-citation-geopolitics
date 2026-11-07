@@ -7,6 +7,10 @@ Settings come from config.yaml -> models[name=mistral].native:
 No agent object and no instructions: conversations.start takes model + tools directly,
 so Mistral gets no system prompt the other providers don't.
 
+The conversation is stored (default). With store=False the smoke test got responses that
+ended after the search tool ran, with no answer, so that flag is not used. If a response
+still has searches but no answer text, query() raises so the job is retried and logged.
+
 Limitation: Mistral returns only cited sources (tool_reference chunks), not the full
 list of search results. retrieved_urls is therefore empty and retrieved_available=False;
 selection bias can't be computed for Mistral native.
@@ -43,7 +47,6 @@ def _build_request(job, config):
         "model": native["model"],
         "inputs": job["question"]["text"],
         "tools": [{"type": native.get("tool", "web_search")}],
-        "store": False,
     }
     if gen.get("temperature") is not None:
         req["completion_args"] = {"temperature": gen["temperature"]}
@@ -109,4 +112,10 @@ def parse(resp):
 def query(job, config):
     """Run one question through Mistral with native web search. Raises on API errors."""
     resp = _get_client().beta.conversations.start(**_build_request(job, config))
-    return parse(resp.model_dump(mode="json"))
+    rec = parse(resp.model_dump(mode="json"))
+    if rec["n_searches"] and not rec["text"].strip():
+        raise RuntimeError(
+            "mistral returned search tool calls but no answer "
+            f"(conversation_id={rec['raw'].get('conversation_id')})"
+        )
+    return rec
