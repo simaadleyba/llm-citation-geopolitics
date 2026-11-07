@@ -12,8 +12,9 @@ Auditing which news sources LLM search cites, and how that shifts with model ori
 | Controversy | factual, disputed |
 | Prompt condition | default (no instruction), cite ("Cite your sources inline as links.") |
 
-Main run: 36 questions (6 per topic country × controversy cell) × 3 languages × 6 models × 3 reps = 1,944 calls, default condition.
-Robustness arm: the same questions in the cite condition, 1 rep = 648 calls.
+36 questions (6 per topic country × controversy cell) × 3 languages × 6 systems × 2 conditions × 1 call = 1,296 calls (~$65).
+Every question × language × system runs once in each condition, so the condition effect is a paired comparison.
+Single calls mean run-to-run noise is averaged across the 108 question × language items rather than estimated per item.
 
 ### Retrieval: native only (what users get)
 
@@ -29,11 +30,11 @@ part. `clients/openrouter.py` is kept; add `common` to `run.retrievers` in confi
 
 ### Prompt conditions
 
-- **default** (primary): the bare question, no system prompt. Five of six APIs return structured citations
+- **default**: the bare question, no system prompt. Five of six APIs return structured citations
   without being asked.
-- **cite** (robustness, 1 rep): the same question with one uniform instruction. Asking for citations can change
-  what gets cited, so this arm measures that effect rather than assuming it away. It also recovers citations
-  for DeepSeek, whose API returns none by default.
+- **cite**: the same question with one uniform instruction. Asking for citations can change what gets cited,
+  so this condition measures that effect rather than assuming it away. It also recovers citations for
+  DeepSeek, whose API returns none by default.
 
 ### What is measured per call
 
@@ -76,8 +77,7 @@ pip install -r requirements.txt
 python scripts/smoke_test.py                # one fixed question through all 6 systems
 python scripts/run_queries.py --dry-run     # list jobs, no calls
 python scripts/run_queries.py --limit 12    # pilot
-python scripts/run_queries.py               # main run (default condition); rerun to resume after a crash
-python scripts/run_queries.py --condition cite   # robustness arm
+python scripts/run_queries.py               # full run, both conditions; rerun to resume after a crash
 python scripts/extract_citations.py
 # label new domains in data/labels/domain_labels.csv
 python scripts/merge_labels.py

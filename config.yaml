@@ -4,7 +4,7 @@ run:
   languages: [en, fr, zh]
   retrievers: [native]    # main design: each vendor's own search api ("what users get").
                           # add "common" to also run the openrouter + exa condition (clients/openrouter.py, kept but off)
-  conditions: [default]   # add "cite" to run the robustness arm below
+  conditions: [default, cite]   # every question runs once bare and once with the cite instruction (paired)
   shuffle_order: true
   seed: 540
   output_dir: data/raw
@@ -62,9 +62,9 @@ generation:
 
 # prompt conditions. each job runs under one; the condition is part of its job_id.
 conditions:
-  default:               # primary: bare api call, no instruction
+  default:               # bare api call, no instruction
     system_prompt: null
-    reps: 3
-  cite:                  # robustness arm: same question + a uniform citation instruction.
-    system_prompt: "Cite your sources inline as links."   # measures how much asking for citations
-    reps: 1                                              # changes visibility; recovers deepseek citations
+    reps: 1
+  cite:                  # same question + a uniform citation instruction. measures how much asking
+    system_prompt: "Cite your sources inline as links."   # for citations changes visibility;
+    reps: 1                                              # recovers deepseek citations
