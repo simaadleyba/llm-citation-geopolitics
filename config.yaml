@@ -62,9 +62,11 @@ generation:
 
 # prompt conditions. each job runs under one; the condition is part of its job_id.
 conditions:
-  default:               # bare api call, no instruction
-    system_prompt: null
+  default:               # bare question, no instruction
     reps: 1
-  cite:                  # same question + a uniform citation instruction. measures how much asking
-    system_prompt: "Cite your sources inline as links."   # for citations changes visibility;
-    reps: 1                                              # recovers deepseek citations
+  cite:                  # same question with a citation instruction appended to the question text,
+    reps: 1              # in the question's language. not a system prompt: deepseek ignores those.
+    suffix:              # TODO: native speakers check fr and zh before the real run
+      en: "Cite your sources inline as links."
+      fr: "Citez vos sources dans le texte sous forme de liens."
+      zh: "请在回答中以链接形式注明信息来源。"

@@ -139,11 +139,21 @@ def text_urls(text):
     return list(dict.fromkeys(u.rstrip(".,;:!?") for u in URL_RE.findall(text or "")))
 
 
-def config_for(job, config):
-    """Config with the job's condition applied (its system prompt)."""
-    cond = config["conditions"][job["condition"]]
-    return {**config, "generation": {**config.get("generation", {}),
-                                      "system_prompt": cond.get("system_prompt")}}
+def prompt_text(job, config):
+    """The text actually sent: the question, plus the condition's suffix in the question's language."""
+    q = job["question"]
+    suffix = (config["conditions"][job["condition"]].get("suffix") or {}).get(q["lang"])
+    if config["conditions"][job["condition"]].get("suffix") and not suffix:
+        raise ValueError(f"condition {job['condition']} has no suffix for lang {q['lang']}")
+    if not suffix:
+        return q["text"]
+    sep = "" if q["lang"] == "zh" else " "
+    return q["text"].rstrip() + sep + suffix
+
+
+def job_for_client(job, config):
+    """Job with the condition applied to the question text. Clients send question.text as is."""
+    return {**job, "question": {**job["question"], "text": prompt_text(job, config)}}
 
 
 def run_job(job, config, run_id):
@@ -163,23 +173,25 @@ def run_job(job, config, run_id):
         "model_requested": model_requested(job),
         "provider_requested": model.get("openrouter_provider") if job["retriever"] == "common" else model["native"]["api"],
         "question_text": q["text"],
+        "prompt_text": None,
     }
     try:
+        base["prompt_text"] = prompt_text(job, config)
         client = client_for(job)
-    except Exception as e:  # noqa: BLE001 - missing/broken sdk: record, don't crash the run
+    except Exception as e:  # noqa: BLE001 - missing sdk or bad condition config: record, don't crash
         return {
             **base,
             "status": "error",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "attempts": 0,
-            "error": f"client import failed: {type(e).__name__}: {e}",
+            "error": f"setup failed: {type(e).__name__}: {e}",
         }
     error = None
     for attempt in range(1, MAX_ATTEMPTS + 1):
         started = datetime.now(timezone.utc)
         t0 = time.monotonic()
         try:
-            out = client.query(job, config_for(job, config))
+            out = client.query(job_for_client(job, config), config)
             out.setdefault("retrieved_available", True)
             out["text_urls"] = text_urls(out.get("text"))
             out.setdefault("cited_available", True)

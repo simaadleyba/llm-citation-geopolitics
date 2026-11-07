@@ -10,7 +10,7 @@ Auditing which news sources LLM search cites, and how that shifts with model ori
 | Query language | EN, FR, ZH (Simplified) |
 | Topic country | US, FR, CN |
 | Controversy | factual, disputed |
-| Prompt condition | default (no instruction), cite ("Cite your sources inline as links.") |
+| Prompt condition | default (bare question), cite (question + "Cite your sources inline as links.", in the question's language) |
 
 36 questions (6 per topic country × controversy cell) × 3 languages × 6 systems × 2 conditions × 1 call = 1,296 calls (~$65).
 Every question × language × system runs once in each condition, so the condition effect is a paired comparison.
@@ -32,9 +32,12 @@ part. `clients/openrouter.py` is kept; add `common` to `run.retrievers` in confi
 
 - **default**: the bare question, no system prompt. Five of six APIs return structured citations
   without being asked.
-- **cite**: the same question with one uniform instruction. Asking for citations can change what gets cited,
-  so this condition measures that effect rather than assuming it away. It also recovers citations for
-  DeepSeek, whose API returns none by default.
+- **cite**: the same question with one instruction appended to the question text, translated into the
+  question's language (config `conditions.cite.suffix`). It goes in the question, not a system prompt,
+  because DeepSeek ignores system prompts when search is on. Asking for citations can change what gets
+  cited, so this condition measures that effect rather than assuming it away. It also recovers citations
+  for DeepSeek and Qwen, whose APIs return none by default. Records keep both `question_text` and the
+  `prompt_text` actually sent.
 
 ### What is measured per call
 
@@ -44,9 +47,8 @@ Observed in the smoke tests (re-check in the pilot):
 | --- | --- | --- | --- | --- | --- | --- |
 | sites checked (retrieved) | yes | yes | no | no | yes | yes |
 | structured citations | yes | yes | yes | yes | no | no |
-| links in text when asked (cite) | yes | yes | – | – | yes | no |
+| links in text when asked (cite) | yes | yes | – | – | yes | yes |
 
-DeepSeek writes no links even when asked, so it is measured by what it retrieved only.
 Qwen fans out (several queries per search call, often 5+ calls), so it retrieves far more pages than the others.
 
 Cited = structured citations ∪ urls written in the answer text. `calls.csv` also records why a call has
