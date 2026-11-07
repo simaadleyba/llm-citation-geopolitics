@@ -43,7 +43,7 @@ models:
     origin: CN
     openrouter_id: deepseek/deepseek-v4-pro-0813
     openrouter_provider: DeepSeek  # TODO: confirm DeepSeek is listed as a provider; if not, note as limitation
-    native: {api: deepseek, model: TODO, tool: web_search}
+    native: {api: deepseek, model: deepseek-v4-pro, tool: web_search_20250305, max_uses: 5}  # anthropic-format endpoint; deepseek-v4-pro = DeepSeek-V4-Pro-0813
 
 retrievers:
   common:

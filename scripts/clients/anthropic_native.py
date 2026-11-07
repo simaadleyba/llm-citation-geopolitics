@@ -97,8 +97,11 @@ def query(job, config):
     Handles pause_turn by resending the paused assistant message unchanged.
     Raises on API errors; the orchestrator handles retries.
     """
-    client = _get_client()
-    req = _build_request(job, config)
+    return run(_get_client(), _build_request(job, config))
+
+
+def run(client, req):
+    """Send a Messages request, following pause_turn. Shared with deepseek_native."""
     responses = []
     for _ in range(MAX_CONTINUATIONS + 1):
         resp = client.messages.create(**req).model_dump(mode="json")
