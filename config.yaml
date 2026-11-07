@@ -35,7 +35,7 @@ models:
     origin: FR
     openrouter_id: mistralai/mistral-large-4-0
     openrouter_provider: mistral
-    native: {api: mistral, model: mistral-large-latest, tool: web_search}  # conversations api (beta). TEMP alias: replace with the dated id smoke_test logs as model_returned; only cited urls exposed
+    native: {api: mistral, model: mistral-large-4-0, tool: web_search}  # conversations api (beta); only cited urls exposed
   - name: qwen
     origin: CN
     openrouter_id: qwen/qwen3.8-max-0902
